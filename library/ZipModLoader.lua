@@ -35,9 +35,16 @@ function ZipModLoader:__call(name)
     end
     local content = file:read("*a")
     file:close()
-    local loaded_chunk = load(content, filename)
+    local bom_a, bom_b, bom_c = string.byte(content, 1, 3)
+    if bom_a == 239 and bom_b == 187 and bom_c == 191 then
+        content = content:sub(4)
+    end
+    local loaded_chunk, e = load(content, filename)
     return function()
         table.insert(directory_stack, filename:sub(1, filename:find("/[^/]*$")))
+        if loaded_chunk == nil then
+            print(loaded_chunk, e)
+        end
         local result = loaded_chunk()
         table.remove(directory_stack)
         return result
